@@ -1,0 +1,44 @@
+<h3><%= @id %></h3>
+      <%= if @exists do %>
+      <p>
+      Computername: <%= @connection.ident.computerName %>
+      </p>
+      <p>
+      Username: <%= @connection.ident.username %>
+      </p>
+      <p>
+      Processname: <%= @connection.ident.processname %>
+      </p>
+      <%= if @connection.connected do %>
+      <h4>shell: </h4>
+      <pre><code>
+      <%= for line <- Enum.reverse(@connection.shell_output) do %>
+      <%= line %>
+      <% end %>
+      </code></pre>
+
+      <.form let={f} for={@changeset} phx-submit="shell_command">
+        <%= label f, :command %>
+        <%= text_input f, :command %>
+        <%= error_tag f, :command %>
+
+        <%= submit "Run" %>
+      </.form>
+
+      <p>
+        <%= link "Take Screenshot", to: "#", phx_click: "take_screenshot", phx_value_id: @id %>
+      </p>
+
+      <%= if @screenshot_exists do %>
+        <p>
+          <img src={"data:image/png;base64, #{@screenshot}"} alt="no image" />
+        </p>
+      <% end %>
+
+      <p><%= link "Disconnect", to: "#", phx_click: "disconnect", phx_value_id: @id %></p>
+      <% else %>
+      <p><%= link "Connect", to: "#", phx_click: "connect", phx_value_id: @id %></p>
+      <% end %>
+      <% else %>
+      doesnt exist
+      <% end %>

