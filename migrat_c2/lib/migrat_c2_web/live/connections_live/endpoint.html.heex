@@ -10,6 +10,11 @@
       Processname: <%= @connection.ident.processname %>
       </p>
       <%= if @connection.connected do %>
+
+      <h4>Term:</h4>
+
+      <.terminal connection={@connection} id={@id}/>
+
       <h4>shell: </h4>
       <pre><code>
       <%= for line <- Enum.reverse(@connection.shell_output) do %>
@@ -42,3 +47,14 @@
       <% else %>
       doesnt exist
       <% end %>
+
+      <script>
+      import Terminal from 'xterm'
+
+let term = new Terminal({
+  cursorBlink: true,
+})
+
+term.open(document.getElementById('terminal-container'))
+term.on('data', (data) => console.log(data))
+      </script>

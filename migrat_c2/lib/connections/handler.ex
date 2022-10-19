@@ -87,6 +87,7 @@ defmodule Connections.Handler do
   def handle_cast({:shell_response, response}, state) do
     Logger.info("process  got shell_response #{response.output}")
     Registry.insert_shell_line(state.ident.id, response.output)
+    MigratC2.LiveUpdate.command_output(state.ident.id, response.output)
     {:noreply, state}
   end
 

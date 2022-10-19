@@ -41,6 +41,16 @@ defmodule MigratC2Web.ConnectionsLive.Endpoint do
   end
 
   @impl true
+  def handle_info({:command_output, data}, socket) do
+    Logger.info("got command data from pubSub")
+    Phoenix.LiveView.send_update(self(), MigratC2Web.ConnectionsLive.Endpoint.Terminal,
+      id: socket.assigns.id,
+      data: data
+    )
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("connect", %{"id" => id}, socket) do
     Connections.Registry.request_connection(id)
     {:noreply, socket}
@@ -59,6 +69,12 @@ defmodule MigratC2Web.ConnectionsLive.Endpoint do
   def handle_event("take_screenshot", _, socket) do
     Connections.Handler.send_take_screenshot(socket.assigns.connection.handler)
     {:noreply, socket}
+  end
+
+  def terminal(assigns) do
+    assigns
+    |> Map.put(:module, __MODULE__.Terminal)
+    |> live_component()
   end
 
 
