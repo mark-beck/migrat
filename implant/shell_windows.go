@@ -2,6 +2,14 @@
 
 package main
 
+import (
+	"io"
+	"log"
+	"net"
+	"os/exec"
+	"syscall"
+)
+
 type Shell struct {
 	placeholder bool
 	finished    chan error
