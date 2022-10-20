@@ -1,4 +1,4 @@
-module migrator
+module migrat
 
 go 1.18
 

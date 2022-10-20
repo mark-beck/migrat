@@ -11,9 +11,20 @@
       </p>
       <%= if @connection.connected do %>
 
-      <h4>Term:</h4>
 
-      <.terminal connection={@connection} id={@id}/>
+      <p>
+        <%= link "start systemshell", to: "#", phx_click: "start_systemshell", phx_value_id: @id %>
+      </p>
+
+      <div>
+      <h4>Running Modules</h4>
+      <ul>
+      <%= for module <- @connection.modules do %>
+      <li><%= module %></li>
+      <.terminal connection={@connection} id={@id} name={module}/>
+      <%= end %>
+      </ul>
+      </div>
 
       <h4>shell: </h4>
       <pre><code>

@@ -34,37 +34,29 @@ defmodule Connections.Translator do
 
   defp decode_message(type, data) do
     case type do
-      0 -> {:heartbeat_response, Migrat.HeartbeatResponse.decode(data)}
-      1 -> {:shell_command, Migrat.ShellCommand.decode(data)}
-      2 -> {:get_file, Migrat.GetFile.decode(data)}
-      3 -> {:take_screenshot, Migrat.TakeScreenshot.decode(data)}
-      4 -> {:get_directory, Migrat.GetDirectory.decode(data)}
-      5 -> {:interpret, Migrat.Interpret.decode(data)}
-      6 -> {:inject_shellcode, Migrat.InjectShellcode.decode(data)}
-      10 -> {:ident, Migrat.Ident.decode(data)}
-      11 -> {:shell_response, Migrat.ShellResponse.decode(data)}
-      12 -> {:file, Migrat.File.decode(data)}
-      13 -> {:screenshot, Migrat.Screenshot.decode(data)}
-      14 -> {:get_directory_response, Migrat.GetDirectoryResponse.decode(data)}
-      15 -> {:interpret_response, Migrat.InterpretResponse.decode(data)}
+      0 -> {:ident, Migrat.Ident.decode(data)}
+      1 -> {:heartbeat_response, Migrat.HeartbeatResponse.decode(data)}
+      2 -> {:error, Migrat.Error.decode(data)}
+      10 -> {:module_start, Migrat.ModuleStart.decode(data)}
+      11 -> {:module_input, Migrat.ModuleInput.decode(data)}
+      12 -> {:module_output, Migrat.ModuleOutput.decode(data)}
+      13 -> {:module_list, Migrat.ModuleList.decode(data)}
+      20 -> {:take_screenshot, Migrat.TakeScreenshot.decode(data)}
+      21 -> {:screenshot, Migrat.Screenshot.decode(data)}
     end
   end
 
   defp encode_message(type, m) do
     case type do
-      :heartbeat_response -> Migrat.HeartbeatResponse.encode(m) <> <<0>>
-      :shell_command -> Migrat.ShellCommand.encode(m) <> <<1>>
-      :get_file -> Migrat.GetFile.encode(m) <> <<2>>
-      :take_screenshot -> Migrat.TakeScreenshot.encode(m) <> <<3>>
-      :get_directory -> Migrat.GetDirectory.encode(m) <> <<4>>
-      :interpret -> Migrat.Interpret.encode(m) <> <<5>>
-      :inject_shellcode -> Migrat.InjectShellcode.encode(m) <> <<6>>
-      :ident -> Migrat.Ident.encode(m) <> <<10>>
-      :shell_response -> Migrat.ShellResponse.encode(m) <> <<11>>
-      :file -> Migrat.File.encode(m) <> <<12>>
-      :screenshot -> Migrat.Screenshot.encode(m) <> <<13>>
-      :get_directory_response -> Migrat.GetDirectoryResponse.encode(m) <> <<14>>
-      :interpret_response -> Migrat.InterpretResponse.encode(m) <> <<15>>
+      :ident -> Migrat.Ident.encode(m) <> <<0>>
+      :heartbeat_response -> Migrat.HeartbeatResponse.encode(m) <> <<1>>
+      :error -> Migrat.Error.encode(m) <> <<2>>
+      :module_start -> Migrat.ModuleStart.encode(m) <> <<10>>
+      :module_input -> Migrat.ModuleInput.encode(m) <> <<11>>
+      :module_output -> Migrat.ModuleOutput.encode(m) <> <<12>>
+      :module_list -> Migrat.ModuleList.encode(m) <> <<13>>
+      :take_screenshot -> Migrat.TakeScreenshot.encode(m) <> <<20>>
+      :screenshot -> Migrat.Screenshot.encode(m) <> <<21>>
     end
   end
 
