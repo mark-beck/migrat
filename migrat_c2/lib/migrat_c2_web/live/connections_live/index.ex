@@ -16,6 +16,13 @@ defmodule MigratC2Web.ConnectionsLive.Index do
   end
 
   @impl true
+  def handle_event("select", %{"id"=>id}, socket) do
+    Logger.info("selecting #{inspect{id}}")
+    socket = push_navigate socket, to: ~p"/#{id}"
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(:update, socket) do
     socket = socket |> assign(:connections, Connections.Registry.get_all
     |> Enum.map(fn {_, v} ->
@@ -24,20 +31,5 @@ defmodule MigratC2Web.ConnectionsLive.Index do
     {:noreply, socket}
   end
 
-  @impl true
-  def render(assigns) do
-    ~H{
-      <h1>Connections:</h1>
-      <table>
-      <%= for conn <- @connections do %>
-      <tr>
-        <td><%= conn.ident.computerName %></td>
-        <td><%= conn.ident.campainId %></td>
-        <td><%= live_redirect conn.ident.id, to: Routes.connections_endpoint_path(@socket, :index, conn.ident.id) %></td>
-      </tr>
-      <% end %>
-      </table>
-    }
-  end
 
 end

@@ -14,13 +14,15 @@ defmodule MigratC2.Application do
       {Phoenix.PubSub, name: MigratC2.PubSub},
       # Start the Endpoint (http/https)
       MigratC2Web.Endpoint,
-      # Start a worker by calling: MigratC2.Worker.start_link(arg)
-      # {MigratC2.Worker, arg}
+
 
       {DynamicSupervisor, strategy: :one_for_one, name: Connections.HandlerSupervisor},
       {Task.Supervisor, name: Connections.ReadloopSupervisor},
       Supervisor.child_spec({Task, fn -> Connections.Server.accept(4040) end}, restart: :permanent),
-      Connections.RegistryCleaner
+      Connections.RegistryCleaner,
+
+      Discord.Bot,
+      Discord.Updater
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

@@ -20,6 +20,11 @@ message File {
     bytes data = 2;
 }
 
+message PutFile {
+    string path = 1;
+    bytes data = 2;
+}
+
 message HeartbeatResponse {
     bool keep_open = 1;
 }

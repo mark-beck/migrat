@@ -12,7 +12,7 @@ config :migrat_c2, MigratC2Web.Endpoint,
   url: [host: "localhost"],
   render_errors: [view: MigratC2Web.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: MigratC2.PubSub,
-  live_view: [signing_salt: "salt"]
+  live_view: [signing_salt: "F7gYpMd9zmc9bwACt"]
 
 # Configures the mailer
 #
@@ -36,13 +36,27 @@ config :esbuild,
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
 
+  config :tailwind, version: "3.4.1", default: [
+    args: ~w(
+      --config=tailwind.config.js
+      --input=css/app.css
+      --output=../priv/static/assets/app.css
+    ),
+    cd: Path.expand("../assets", __DIR__)
+  ]
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
+config :nostrum,
+  token: "YOUR_BOT_TOKEN",
+  gateway_intents: :all
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

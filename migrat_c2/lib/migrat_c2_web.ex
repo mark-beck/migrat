@@ -17,94 +17,101 @@ defmodule MigratC2Web do
   and import those modules here.
   """
 
-  def controller do
-    quote do
-      use Phoenix.Controller, namespace: MigratC2Web
+def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
 
-      import Plug.Conn
-      import MigratC2Web.Gettext
-      alias MigratC2Web.Router.Helpers, as: Routes
-    end
+def router do
+  quote do
+    use Phoenix.Router, helpers: false
+
+    import Phoenix.HTML
+    import Phoenix.HTML.Form
+    use PhoenixHTMLHelpers
+
+    # Import common connection and controller functions to use in pipelines
+    import Plug.Conn
+    import Phoenix.Controller
+    import Phoenix.LiveView.Router
   end
+end
 
-  def view do
-    quote do
-      use Phoenix.View,
-        root: "lib/migrat_c2_web/templates",
-        namespace: MigratC2Web
-
-      # Import convenience functions from controllers
-      import Phoenix.Controller,
-        only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
-
-      # Include shared imports and aliases for views
-      unquote(view_helpers())
-    end
+def channel do
+  quote do
+    use Phoenix.Channel
   end
+end
 
-  def live_view do
-    quote do
-      use Phoenix.LiveView,
-        layout: {MigratC2Web.LayoutView, "live.html"}
+def controller do
+  quote do
+    use Phoenix.Controller,
+      formats: [:html, :json],
+      layouts: [html: MigratC2Web.Layouts]
 
-      unquote(view_helpers())
-    end
+    import Plug.Conn
+    import MigratC2Web.Gettext
+
+    unquote(verified_routes())
   end
+end
 
-  def live_component do
-    quote do
-      use Phoenix.LiveComponent
+def live_view do
+  quote do
+    use Phoenix.LiveView,
+      layout: {MigratC2Web.Layouts, :app}
 
-      unquote(view_helpers())
-    end
+    unquote(html_helpers())
   end
+end
 
-  def component do
-    quote do
-      use Phoenix.Component
+def live_component do
+  quote do
+    use Phoenix.LiveComponent
 
-      unquote(view_helpers())
-    end
+    unquote(html_helpers())
   end
+end
 
-  def router do
-    quote do
-      use Phoenix.Router
+def html do
+  quote do
+    use Phoenix.Component
 
-      import Plug.Conn
-      import Phoenix.Controller
-      import Phoenix.LiveView.Router
-    end
+    # Import convenience functions from controllers
+    import Phoenix.Controller,
+      only: [get_csrf_token: 0, view_module: 1, view_template: 1]
+
+    # Include general helpers for rendering HTML
+    unquote(html_helpers())
   end
+end
 
-  def channel do
-    quote do
-      use Phoenix.Channel
-      import MigratC2Web.Gettext
-    end
+defp html_helpers do
+  quote do
+    # HTML escaping functionality
+    import Phoenix.HTML
+    # Core UI components and translation
+    import MigratC2Web.CoreComponents
+    import MigratC2Web.Gettext
+
+    # Shortcut for generating JS commands
+    alias Phoenix.LiveView.JS
+
+    # Routes generation with the ~p sigil
+    unquote(verified_routes())
   end
+end
 
-  defp view_helpers do
-    quote do
-      # Use all HTML functionality (forms, tags, etc)
-      use Phoenix.HTML
-
-      # Import LiveView and .heex helpers (live_render, live_patch, <.form>, etc)
-      import Phoenix.LiveView.Helpers
-
-      # Import basic rendering functionality (render, render_layout, etc)
-      import Phoenix.View
-
-      import MigratC2Web.ErrorHelpers
-      import MigratC2Web.Gettext
-      alias MigratC2Web.Router.Helpers, as: Routes
-    end
+def verified_routes do
+  quote do
+    use Phoenix.VerifiedRoutes,
+      endpoint: MigratC2Web.Endpoint,
+      router: MigratC2Web.Router,
+      statics: MigratC2Web.static_paths()
   end
+end
 
-  @doc """
-  When used, dispatch to the appropriate controller/view/etc.
-  """
-  defmacro __using__(which) when is_atom(which) do
-    apply(__MODULE__, which, [])
-  end
+@doc """
+When used, dispatch to the appropriate controller/view/etc.
+"""
+defmacro __using__(which) when is_atom(which) do
+  apply(__MODULE__, which, [])
+end
 end

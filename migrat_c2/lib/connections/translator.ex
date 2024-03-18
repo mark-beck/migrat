@@ -8,13 +8,9 @@ defmodule Connections.Translator do
       data = xor_message(data, key)
 
       message_type = Binary.last(data)
-      Logger.info("got message type #{message_type}")
 
-      data =
-        data
-        |> Binary.reverse()
-        |> Binary.drop(1)
-        |> Binary.reverse()
+
+      data = binary_part(data, 0, byte_size(data) - 1)
 
       {:ok, decode_message(message_type, data)}
     else

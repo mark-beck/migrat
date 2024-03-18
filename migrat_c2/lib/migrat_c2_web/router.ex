@@ -5,7 +5,7 @@ defmodule MigratC2Web.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {MigratC2Web.LayoutView, :root}
+    plug :put_root_layout, {MigratC2Web.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end

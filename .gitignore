@@ -93,3 +93,11 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/elixir,phoenix,go,windows
+
+## Rust
+target/
+Cargo.lock
+
+## Artifacts
+migrator
+.env

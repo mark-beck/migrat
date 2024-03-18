@@ -9,7 +9,7 @@ defmodule Connections.RegistryCleaner do
 
   @impl true
   def init(state) do
-    :timer.send_interval(10_000, :work)
+    :timer.send_interval(1_000, :work)
     {:ok, state}
   end
 
@@ -24,7 +24,7 @@ defmodule Connections.RegistryCleaner do
     |> Enum.map(fn {k, m} ->
       if not m.connected do
         td = DateTime.diff(DateTime.now!("Etc/UTC"), m.last_seen)
-        if td >= 20 do
+        if td >= 5 do
           Connections.Registry.remove_entry(k)
         end
       end

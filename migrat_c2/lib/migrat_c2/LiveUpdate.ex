@@ -9,8 +9,12 @@ defmodule MigratC2.LiveUpdate do
     Phoenix.PubSub.subscribe(MigratC2.PubSub, "connections:#{id}")
   end
 
-  def unsubscripe_new_connection do
+  def unsubscribe_new_connection do
     Phoenix.PubSub.unsubscribe(MigratC2.PubSub, "connections")
+  end
+
+  def unsubscribe_id(id) do
+    Phoenix.PubSub.unsubscribe(MigratC2.PubSub, "connections:#{id}")
   end
 
   def notify_update() do
@@ -20,7 +24,16 @@ defmodule MigratC2.LiveUpdate do
 
   def new_screenshot(id, img) do
     Logger.info("screenshot notify")
-    Phoenix.PubSub.broadcast(MigratC2.PubSub, "connections:#{id}", {:screenshot, img})
+    Phoenix.PubSub.broadcast(MigratC2.PubSub, "connections:#{id}", {:screenshot, id, img})
+  end
+
+  def new_shellmessage(id, msg) do
+    Phoenix.PubSub.broadcast(MigratC2.PubSub, "connections:#{id}", {:shellmessage, id, msg})
+  end
+
+  def command_response(id, type, data) do
+    Logger.info("command_response notify")
+    Phoenix.PubSub.broadcast(MigratC2.PubSub, "connections:#{id}", {:command_response, id, type, data})
   end
 
 

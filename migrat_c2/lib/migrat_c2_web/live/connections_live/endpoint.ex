@@ -8,7 +8,7 @@ defmodule MigratC2Web.ConnectionsLive.Endpoint do
 
     {
       :ok,
-      socket |> assign(:changeset, MigratC2.Inputs.ShellCommand.changeset(%MigratC2.Inputs.ShellCommand{}))
+      socket |> assign(:shellcommand, MigratC2.Inputs.ShellCommand.changeset(%MigratC2.Inputs.ShellCommand{}) |> to_form)
       |> assign(:screenshot_exists, false)
     }
   end
@@ -36,17 +36,20 @@ defmodule MigratC2Web.ConnectionsLive.Endpoint do
 
   @impl true
   def handle_info({:screenshot, img}, socket) do
+    Logger.debug("MigratC2Web.ConnectionsLive.Endpoint handle_info({:screenshot, img}, socket)")
     socket = socket |> assign(:screenshot_exists, true) |> assign(:screenshot, img)
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("connect", %{"id" => id}, socket) do
+    Logger.debug("Connecting to #{id}")
     Connections.Registry.request_connection(id)
     {:noreply, socket}
   end
 
   def handle_event("disconnect", _, socket) do
+    Logger.debug("Disconnecting id #{socket.assigns.id}")
     Connections.Handler.disconnect(socket.assigns.connection.handler)
     {:noreply, socket}
   end
